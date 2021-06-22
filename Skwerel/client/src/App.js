@@ -1,26 +1,25 @@
 import {useState} from 'react'
 import './App.css';
-
+import axios from 'axios'
 import keys from "./config/keys";
+import { url } from './helpers/helpers';
 
 function App() {
 
   const [rows, setRows] = useState([]);
   const performSearch = (searchTerm)=>  {
-    const url = `https://api.themoviedb.org/3`;
-    const movieRoute = `/search/movie?api_key=${keys.tmdb_api_key}&query=${searchTerm}`;
-    const endpoint = url + movieRoute;
-    fetch(endpoint)
-      .then((response) => response.json())
+    if(!searchTerm || searchTerm.trim().length === 0 ) return setRows([])
+    const queryRoute = `/search/movie?api_key=${keys.tmdb_api_key}&query=${searchTerm}`;
+    axios.get(url+queryRoute)
       .then((searchResults) => {
-        let movies = searchResults.results
         let movieRows = [];
-        movies.forEach((movie) => {
-          let poster = "https://image.tmdb.org/t/p/w200" + movie.poster_path
+        searchResults.data.results.forEach((movie) => {
+          let {poster_path, id, title} = movie
+          let poster = "https://image.tmdb.org/t/p/w200" + poster_path
           const movieRow = (
-            <div key={movie.id}>
-              <img src={poster} alt="poster" />
-              {movie.title}
+            <div key={id}>
+              <img src={poster} alt={title} />
+              {title}
             </div>
           );
           movieRows.push(movieRow);
@@ -31,7 +30,6 @@ function App() {
   }
 
   const searchChangeHandler = (event) => {
-    console.log(event.target.value)
     performSearch(event.target.value)
   }
   
@@ -43,6 +41,7 @@ function App() {
           type="text"
           placeholder="enter your movie here"
           onChange={searchChangeHandler}
+          autoComplete='off'
         />
         {rows}
     </div>
